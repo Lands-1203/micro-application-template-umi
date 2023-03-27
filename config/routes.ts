@@ -16,20 +16,25 @@ export default [
     redirect: '/welcome',
   },
   {
-    path: '/welcome',
-    name: 'name',
-    icon: 'smile',
-    component: './Welcome',
+    path: '/system',
+    redirect: '/system/Welcome',
   },
   {
-    path: '/welcome1',
-    name: 'name1',
-    icon: 'smile',
+    path: '/system',
+    routes: [
+      {
+        path: 'welcome',
+        component: './Welcome',
+      },
+    ],
+  },
+  {
+    path: '/welcome',
     component: './Welcome',
   },
   {
     path: '*',
     // layout: false,
-    component: './404',
+    component: './exception/404',
   },
 ];

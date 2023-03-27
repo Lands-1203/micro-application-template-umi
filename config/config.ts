@@ -7,6 +7,13 @@ import routes from './routes';
 const { REACT_APP_ENV = 'dev' } = process.env;
 
 export default defineConfig({
+  alias: {
+    '@': '/src',
+    '@a': '/src/assets',
+    '@c': '/src/components',
+    '@s': '/src/services',
+    '@u': '/src/utils',
+  },
   base: 'businessPlatform',
   /**
    * @name 开启 hash 模式

@@ -1,17 +1,22 @@
 import Footer from '@/components/Footer';
-import { LinkOutlined } from '@ant-design/icons';
+import UnAccessible from '@/pages/exception/403';
+import { InitialStateType } from '@@/plugin-initialState/@@initialState';
 import {
   PageLoading,
   SettingDrawer,
   Settings as LayoutSettings
 } from '@ant-design/pro-components';
-import { Link, RunTimeLayoutConfig } from '@umijs/max';
+import { AvatarDropdown, AvatarName } from '@c/RightContent/AvatarDropdown';
+import { RunTimeLayoutConfig } from '@umijs/max';
+import { cloneDeep } from 'lodash';
 import defaultSettings from '../config/defaultSettings';
-
+import initMenuData from './initMenuData.mock';
 import { errorConfig } from './requestErrorConfig';
-const isDev = process.env.NODE_ENV === 'development';
+// const isDev = process.env.NODE_ENV === 'development';
 // const loginPath = '/user/login';
-
+let masterConfig:
+  | API.useQiankunStateForSlaveReturnProps<InitialStateType>
+  | undefined;
 /**
  * @see  https://umijs.org/zh-CN/plugins/plugin-initial-state
  * */
@@ -19,19 +24,23 @@ export async function getInitialState(): Promise<{
   settings?: Partial<LayoutSettings>;
   loading?: boolean;
 }> {
-  // 如果不是登录页面，执行
-  // const { location } = history;
-  // if (location.pathname !== loginPath) {
-  //   const currentUser = await fetchUserInfo();
-  //   return {
-  //     fetchUserInfo,
-  //     currentUser,
-  //     settings: defaultSettings as Partial<LayoutSettings>,
-  //   };
-  // }
+  let masterSettings:
+    | (Partial<LayoutSettings> & Record<string, any>)
+    | undefined;
+
+  if (masterConfig) {
+    masterSettings = {
+      pure: true,
+      colorPrimary: masterConfig?.masterState?.settings?.colorPrimary,
+      navTheme: masterConfig?.masterState?.settings?.navTheme,
+    };
+  }
 
   return {
-    settings: defaultSettings as Partial<LayoutSettings>,
+    settings: {
+      ...defaultSettings,
+      ...masterSettings,
+    } as Partial<LayoutSettings>,
   };
 }
 
@@ -41,30 +50,26 @@ export const layout: RunTimeLayoutConfig = ({
   setInitialState,
 }) => {
   return {
-    pure: true,
     waterMarkProps: {
       content: '水印',
     },
-    footerRender: () => <Footer />,
-    onPageChange: () => {
-      // const { location } = history;
-      // 如果没有登录，重定向到 login
-      // if (!initialState?.currentUser && location.pathname !== loginPath) {
-      //   history.push(loginPath);
-      // }
+
+    avatarProps: {
+      src: 'https://gw.alipayobjects.com/zos/rmsportal/BiazfanxmamNRoxxVxka.png',
+      title: <AvatarName />,
+      render: (_, avatarChildren) => {
+        return <AvatarDropdown>{avatarChildren}</AvatarDropdown>;
+      },
     },
-    links: isDev
-      ? [
-          <Link key="openapi" to="/umi/plugin/openapi" target="_blank">
-            <LinkOutlined />
-            <span>OpenAPI 文档</span>
-          </Link>,
-        ]
-      : [],
-    menuHeaderRender: undefined,
-    // 自定义 403 页面
-    // unAccessible: <div>unAccessible</div>,
-    // 增加一个 loading 的状态
+    menu: {
+      params: { initMenuData },
+      request: async ({ initMenuData }) => {
+        return cloneDeep(initMenuData) || []; //为什么这儿要用深拷贝？因为不同的uim版本会导致我丢给他的对象内部属性children变成router 所以用深度拷贝单独给他一个对象
+      },
+    },
+    footerRender: () => <Footer />,
+    onPageChange: () => {},
+    unAccessible: <UnAccessible />,
     childrenRender: (children) => {
       if (initialState?.loading) return <PageLoading />;
       return (
@@ -100,15 +105,20 @@ export const request = {
 
 export const qiankun = {
   // 应用加载之前
-  async bootstrap(props: any) {
+  async bootstrap(
+    props: API.useQiankunStateForSlaveReturnProps<InitialStateType>,
+  ) {
+    masterConfig = props;
     console.log('app1 bootstrap', props);
   },
   // 应用 render 之前触发
-  async mount(props: any) {
+  async mount(props: API.useQiankunStateForSlaveReturnProps<InitialStateType>) {
     console.log('app1 mount', props);
   },
   // 应用卸载之后触发
-  async unmount(props: any) {
+  async unmount(
+    props: API.useQiankunStateForSlaveReturnProps<InitialStateType>,
+  ) {
     console.log('app1 unmount', props);
   },
 };
