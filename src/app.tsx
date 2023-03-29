@@ -68,7 +68,11 @@ export const layout: RunTimeLayoutConfig = ({
       },
     },
     footerRender: () => <Footer />,
-    onPageChange: () => {},
+    onPageChange: () => {
+      if (masterConfig) {
+        return;
+      }
+    },
     unAccessible: <UnAccessible />,
     childrenRender: (children) => {
       if (initialState?.loading) return <PageLoading />;
